@@ -3,6 +3,7 @@ package multiplier
 import (
 	"fmt"
 	"os/exec"
+	"sync"
 )
 
 type CmdContext struct {
@@ -12,15 +13,23 @@ type CmdContext struct {
 }
 
 func Run(ctx CmdContext) {
-	fmt.Printf("Will run the '%s' command %d times using %d parallele threads\n", ctx.CMD, ctx.NrOfThreads, ctx.NrOfIterations)
+	fmt.Printf("Will run the '%s' command %d times using %d parallel threads\n", ctx.CMD, ctx.NrOfIterations, ctx.NrOfThreads)
 
-	workload := make(chan string)
-	go initWorkload(workload, ctx)
+	workload := make(chan string, ctx.NrOfIterations)
 
-	for work := range workload {
-		r, _ := runCmd(work)
-		fmt.Printf("\nResult of command '%s' is %q\n", work, r)
+	var wg sync.WaitGroup
+	for i := 0; i < ctx.NrOfThreads; i++ {
+		wg.Add(1)
+		go func(workerID int) {
+			defer wg.Done()
+			worker(workerID, workload)
+		}(i)
 	}
+
+	initWorkload(workload, ctx)
+	wg.Wait()
+
+	fmt.Println("Program done")
 }
 
 func initWorkload(workload chan<- string, ctx CmdContext) {
@@ -29,6 +38,13 @@ func initWorkload(workload chan<- string, ctx CmdContext) {
 		workload <- ctx.CMD
 	}
 	close(workload)
+}
+
+func worker(id int, workload <-chan string) {
+	for cmd := range workload {
+		r, _ := runCmd(cmd)
+		fmt.Printf("\n[Worker-%d] Result of command '%s' is %q\n", id, cmd, r)
+	}
 }
 
 func runCmd(cmd string) (string, error) {
