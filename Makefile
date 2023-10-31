@@ -1,5 +1,6 @@
 EXEC_NAME=cmd-multp
-BUILD_DIR=bin
+PRJ_DIR=$(shell pwd)
+BUILD_DIR=$(PRJ_DIR)/bin
 all: tidy vet build
 
 tidy:
@@ -10,7 +11,7 @@ vet:
 
 build: clean
 	mkdir $(BUILD_DIR)
-	go build -o $(BUILD_DIR)/$(EXEC_NAME)
+	go build -C cmd -o $(BUILD_DIR)/$(EXEC_NAME)
 
 clean:
 	rm -rf $(BUILD_DIR)
