@@ -1,6 +1,6 @@
 # Command Multiplier
 
-This program will execute a given terminal command in paralele for a number of iterations
+This program will execute a given terminal command in parallel for a number of iterations
 ```bash
 # How to run
 make all
